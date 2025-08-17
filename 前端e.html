@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel AI处理工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            padding: 40px;
+            margin: 20px;
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: 0;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #1a2980, #26d0ce);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            font-size: 1.2rem;
+            font-weight: 300;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .card-title i {
+            color: #26d0ce;
+            font-size: 1.8rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover, .upload-area.dragover {
+            background: #e8f4fe;
+            border-color: #2980b9;
+        }
+        
+        .upload-icon {
+            font-size: 3.5rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .upload-text p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .browse-btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .browse-btn:hover {
+            background: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4fc;
+            border-radius: 12px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .file-info.show {
+            display: block;
+        }
+        
+        .file-info p {
+            margin: 8px 0;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #3498db;
+            word-break: break-all;
+        }
+        
+        .prompt-section {
+            margin-bottom: 20px;
+        }
+        
+        .prompt-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        
+        .prompt-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .prompt-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .prompt-example {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        .action-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .action-btn {
+            padding: 16px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .process-btn {
+            background: linear-gradient(to right, #1a2980, #26d0ce);
+            color: white;
+        }
+        
+        .process-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(26, 41, 128, 0.4);
+        }
+        
+        .process-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .download-btn {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+            color: white;
+            display: none;
+        }
+        
+        .download-btn.show {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+        }
+        
+        .status-section {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .status-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #3498db;
+        }
+        
+        .status-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #1a2980, #26d0ce);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 10px;
+        }
+        
+        .progress-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .log-section {
+            background: #2c3e50;
+            color: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .loading {
+            animation: spin 1.5s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .action-btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Excel AI 数据处理工具</h1>
+            <p class="subtitle">上传Excel文件，输入处理指令，AI智能转换数据格式，下载处理结果</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-file-upload"></i>
+                    <h2>上传Excel文件</h2>
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>拖放文件到此处</h3>
+                        <p>支持.xlsx格式的Excel文件（最大100MB）</p>
+                        <button class="browse-btn">选择文件</button>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx">
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <p>已选择文件: <span class="file-name" id="fileName"></span></p>
+                    <p>文件大小: <span id="fileSize"></span></p>
+                </div>
+                
+                <div class="prompt-section">
+                    <label class="prompt-label" for="promptInput">AI处理指令:</label>
+                    <textarea 
+                        id="promptInput" 
+                        class="prompt-input" 
+                        placeholder="例如：请将原始文件转换为目标格式，特别注意H列的数据处理..."
+                    ></textarea>
+                    <p class="prompt-example">提示：系统会按照预定义规则处理数据，此处的指令用于指导AI处理复杂情况</p>
+                </div>
+                
+                <div class="action-section">
+                    <button class="action-btn process-btn" id="processBtn" disabled>
+                        <i class="fas fa-cogs"></i> 开始AI处理
+                    </button>
+                    <button class="action-btn download-btn" id="downloadBtn">
+                        <i class="fas fa-download"></i> 下载结果文件
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-header">
+                <i class="fas fa-sync-alt"></i>
+                <h3>处理状态</h3>
+            </div>
+            
+            <div class="status-content">
+                <div class="status-icon">
+                    <i class="fas fa-cloud-upload-alt" id="statusIcon"></i>
+                </div>
+                <p class="status-text" id="statusText">请上传Excel文件并输入处理指令</p>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">等待操作...</p>
+                </div>
+                
+                <div class="log-section" id="logContainer">
+                    <div class="log-entry">系统准备就绪</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>本工具将文件发送至后端，通过AI大模型API处理，按照预定义规则转换数据格式 | 安全可靠 | 高效处理</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const promptInput = document.getElementById('promptInput');
+            const processBtn = document.getElementById('processBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const progress = document.getElementById('progress');
+            const progressText = document.getElementById('progressText');
+            const logContainer = document.getElementById('logContainer');
+            let processedFileUrl = null;
+            
+            // 添加日志
+            function addLog(message) {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+            
+            // 点击上传区域触发文件选择
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 浏览按钮触发文件选择
+            document.querySelector('.browse-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                fileInput.click();
+            });
+            
+            // 拖放功能
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // 文件选择处理
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+            
+            // 处理文件
+            function handleFile(file) {
+                if (!file.name.endsWith('.xlsx')) {
+                    alert('请上传.xlsx格式的Excel文件');
+                    return;
+                }
+                
+                if (file.size > 100 * 1024 * 1024) {
+                    alert('文件大小超过100MB限制');
+                    return;
+                }
+                
+                // 显示文件信息
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.classList.add('show');
+                
+                // 启用处理按钮
+                updateProcessButtonState();
+                
+                // 更新状态
+                statusIcon.className = 'fas fa-file-excel pulse';
+                //statusText.textContent = '文件已准备就绪，请输入处理指令';
+                
+                addLog(`文件已上传: ${file.name} (${formatFileSize(file.size)})`);
+            }
+            
+            // 提示词输入变化
+            promptInput.addEventListener('input', updateProcessButtonState);
+            updateProcessButtonState();
+
+
+            // 更新处理按钮状态
+            function updateProcessButtonState() {
+                const fileReady = fileInput.files.length > 0;
+                const promptReady = promptInput.value.trim().length > 5;
+                
+                processBtn.disabled = !(fileReady && promptReady);
+                
+                if (fileReady && promptReady) {
+                    statusText.textContent = '点击"开始AI处理"按钮开始转换';
+                    statusIcon.className = 'fas fa-play-circle pulse';
+                } else if (fileReady) {
+                    statusText.textContent = '请输入处理指令（至少5个字符）';
+                    statusIcon.className = 'fas fa-comment-alt';
+                }
+                else if (promptReady) {
+                    statusText.textContent = '请上传excel文件';
+                    statusIcon.className = 'fas fa-comment-alt';
+                }
+            }
+            
+
+            // 处理按钮点击事件
+            processBtn.addEventListener('click', () => {
+                const file = fileInput.files[0];
+                const prompt = promptInput.value.trim();
+                
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('prompt', prompt);
+                
+                // 更新状态
+                statusIcon.className = 'fas fa-spinner loading';
+                statusText.textContent = '文件上传中，请稍候...';
+                progressText.textContent = '上传文件到服务器';
+                processBtn.disabled = true;
+                
+                // 显示进度条
+                progress.style.width = '10%';
+                addLog('开始处理流程...');
+                addLog('上传文件到服务器');
+                
+                // 发送请求到后端
+                fetch('http://localhost:5000/process', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('服务器处理错误');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // 更新状态
+                        progress.style.width = '100%';
+                        progressText.textContent = '处理完成！';
+                        
+                        statusIcon.className = 'fas fa-check-circle';
+                        statusIcon.style.color = '#27ae60';
+                        statusText.textContent = '文件处理完成！';
+                        
+                        // 显示下载按钮
+                        downloadBtn.classList.add('show');
+                        downloadBtn.classList.add('pulse');
+
+                        processBtn.disabled = false;
+                        
+                        // 保存处理后的文件URL
+                        processedFileUrl = data.download_url;
+                        
+                        addLog('AI处理完成！');
+                        addLog('结果文件已生成');
+                    } else {
+                        throw new Error(data.message || '处理失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('处理错误:', error);
+                    statusIcon.className = 'fas fa-exclamation-circle';
+                    statusIcon.style.color = '#e74c3c';
+                    statusText.textContent = `处理失败: ${error.message}`;
+                    progressText.textContent = '发生错误';
+                    addLog(`处理失败: ${error.message}`);
+                    
+                    // 重新启用处理按钮
+                    processBtn.disabled = false;
+                });
+            });
+            
+            
+            // 下载按钮点击事件
+            downloadBtn.addEventListener('click', () => {
+
+
+
+                if (!processedFileUrl) {
+                    alert('没有可下载的文件');
+                    return;
+                }
+                
+                // 在新标签页打开文件下载链接
+                const newTab = window.open(processedFileUrl, '_blank');
+
+                // 检查新标签页是否成功打开
+                if (newTab) {
+                    addLog('已在新标签页中打开下载文件');
+                } else {
+                    alert('无法打开新标签页，请检查浏览器设置');
+                }
+                
+                addLog('结果文件已下载');
+
+                // 重新启用处理按钮
+                processBtn.disabled = false;
+            });
+            
+            // 格式化文件大小
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+</html>
